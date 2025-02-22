@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 from ultralytics import YOLO
 from supervision.metrics import MeanAveragePrecision
 from supervision.detection.core import Detections
-
-
 import numpy as np
 import pandas as pd
 
@@ -28,7 +26,6 @@ plt.ylabel("Loss")
 plt.legend()
 plt.title("Training and Validation Loss Curve")
 plt.show()
-
 
 # TASK 2:  visualize the ground truth and predicted bounding boxes on 3-4 random samples
 test_images_dir = "Solar-panel-detection-using-YOLO/dataset/images/test"
@@ -150,7 +147,6 @@ def compute_precision_recall(ground_truth_boxes, predicted_boxes, iou_threshold=
 
     return precision, recall
 
-
 def ap_area_under_curve(precision, recall):
     sorted_indices = np.argsort(recall)
     recall = recall[sorted_indices]
@@ -222,13 +218,8 @@ def perform_predictions(images_dir, model):
 
     return predicted_boxes
 
-
 # Perform predictions using the trained model
 all_predicted_boxes = perform_predictions("Solar-panel-detection-using-YOLO/dataset/images/test", model)
-
-print("Sample Ground Truth Boxes:", all_ground_truth_boxes[:2])
-print("Sample Predicted Boxes:", all_predicted_boxes[:2])
-
 
 #mAP using supervision.metrics
 map50_supervision = MeanAveragePrecision()
@@ -237,7 +228,7 @@ for pred, gt in zip(all_predicted_boxes, all_ground_truth_boxes):
 map_result = map50_supervision.compute()
 print(f"Supervision mAP50: {map_result.map50}")
 
-# Calculate mAP50 using custom Area Under Curve (AUC) method
+# mAP50 using my custom method
 map_auc_results = []
 for i in range(len(all_ground_truth_boxes)):
     precision, recall = compute_precision_recall(all_ground_truth_boxes[i], all_predicted_boxes[i], iou_threshold=0.5)
@@ -304,4 +295,3 @@ for i, row in enumerate(results_table):
     print(f"IoU Threshold: {iou_thresholds[i]}")
     for j, (precision, recall, f1_score) in enumerate(row):
         print(f"  Confidence {confidence_thresholds[j]} -> Precision: {precision:.2f}, Recall: {recall:.2f}, F1: {f1_score:.2f}")
-
