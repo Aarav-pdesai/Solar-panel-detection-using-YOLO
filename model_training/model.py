@@ -124,14 +124,13 @@ if __name__ == '__main__':
 
         for i, pred_box in enumerate(predicted_boxes):
             if isinstance(pred_box, tuple):
-                pred_box = pred_box[0]  # Extract bounding box coordinates
-
+                pred_box = pred_box[0]  
             max_iou = 0
             matched_gt_idx = -1
 
             for j, gt_box in enumerate(ground_truth_boxes):
                 if isinstance(gt_box, tuple):
-                    gt_box = gt_box[0]  # Extract bounding box coordinates
+                    gt_box = gt_box[0]  
                 
                 iou = compute_iou(pred_box, gt_box)
                 if iou >= iou_threshold and iou > max_iou and j not in detected:
@@ -185,7 +184,6 @@ if __name__ == '__main__':
 
         return ground_truth_boxes
 
-    # Load ground truth annotations
     all_ground_truth_boxes = load_ground_truth_boxes("Solar-panel-detection-using-YOLO/dataset/labels/test")
     
     def perform_predictions(images_dir, model):
@@ -195,23 +193,21 @@ if __name__ == '__main__':
             img_path = os.path.join(images_dir, img_file)
             img = cv2.imread(img_path)
 
-            # Perform inference using the trained model
             results = model.predict(img, conf=0.1, iou=0.6, verbose = False)  
 
-            if not results or not results[0].boxes:  # Ensure results exist
-                predicted_boxes.append(Detections.empty())  # Empty prediction for this image
+            if not results or not results[0].boxes:  
+                predicted_boxes.append(Detections.empty())  
                 continue
             
             img_height, img_width = results[0].orig_shape 
             
-            boxes = results[0].boxes.xyxy.clone()  # Clone the tensor to allow modifications
+            boxes = results[0].boxes.xyxy.clone()  
             boxes[:, [0, 2]] /= img_width   # Normalize x-coordinates
             boxes[:, [1, 3]] /= img_height  # Normalize y-coordinates
 
-            # Convert to numpy
             boxes = boxes.cpu().numpy()
-            confidences = results[0].boxes.conf.cpu().numpy()  # Confidence scores
-            class_ids = results[0].boxes.cls.cpu().numpy().astype(int)  # Class IDs
+            confidences = results[0].boxes.conf.cpu().numpy()  
+            class_ids = results[0].boxes.cls.cpu().numpy().astype(int)  
 
             detections = Detections(
                 xyxy=boxes,
@@ -222,7 +218,6 @@ if __name__ == '__main__':
 
         return predicted_boxes
 
-    # Perform predictions using the trained model
     all_predicted_boxes = perform_predictions("Solar-panel-detection-using-YOLO/dataset/images/test", model)
     #mAP using supervision.metrics
     map50_supervision = MeanAveragePrecision()
@@ -247,10 +242,8 @@ if __name__ == '__main__':
         for gt_boxes, pred_boxes in zip(ground_truth_boxes, predicted_boxes):
             filtered_pred_boxes = [box for box in pred_boxes if box[4] is not None and box[4] >= confidence_threshold]
 
-            # Track matched ground truth boxes
             matched_gt = set()
 
-            # Calculate TP and FP
             for pred_box in filtered_pred_boxes:
                 best_iou = 0
                 best_gt_idx = -1
@@ -267,7 +260,6 @@ if __name__ == '__main__':
                 else:
                     fp += 1
 
-            # Calculate FN (ground truth boxes not matched)
             fn += len(gt_boxes) - len(matched_gt)
 
         # Calculate precision, recall, and F1-score
@@ -277,13 +269,11 @@ if __name__ == '__main__':
 
         return precision, recall, f1_score
 
-    # Create a table of Precision, Recall, and F1-scores with IoU thresholds and confidence thresholds
     iou_thresholds = [0.1, 0.3, 0.5, 0.7, 0.9]
     confidence_thresholds = [0.1, 0.3, 0.5, 0.7, 0.9]
 
     results_table = []
 
-    # Compute metrics for each combination of IoU and confidence thresholds
     for iou_thresh in iou_thresholds:
         row = []
         for conf_thresh in confidence_thresholds:
@@ -291,7 +281,6 @@ if __name__ == '__main__':
             row.append((precision, recall, f1_score))
         results_table.append(row)
 
-    #Display the results as a table
     for i, row in enumerate(results_table):
         print(f"IoU Threshold: {iou_thresholds[i]}")
         for j, (precision, recall, f1_score) in enumerate(row):
